@@ -14,14 +14,11 @@ const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 export async function fetchRevenue() {
   try {
-    console.log('Fetching revenue data...');
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const data = await prisma.revenue.findMany({
       orderBy: { month: 'asc' },
     });
-
-    console.log('Data fetch completed after 3 seconds.');
 
     return data;
   } catch (error) {
