@@ -25,7 +25,9 @@ model Invoices {
   customerId  String      @db.Uuid
   amount      Int
   status      String
-  date        DateTime   @default(now())   
+  date        DateTime    @default(now())   
+
+  customers   Customers   @relation(fields: [customerId], references: [id])
 }
 
 model Customers {
@@ -33,6 +35,8 @@ model Customers {
   name        String
   email       String      @unique
   image_url   String
+
+  invoices    Invoices[]
 }
 
 model Revenue {
