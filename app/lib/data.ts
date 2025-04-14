@@ -5,6 +5,7 @@ import {
   CustomersTableType,
   InvoiceForm,
   InvoicesTable,
+  LatestInvoice,
   LatestInvoiceRaw,
   Revenue,
 } from './definitions';
@@ -45,7 +46,7 @@ export async function fetchLatestInvoices() {
       take: 5,
     });
 
-    const latestInvoices = data.map((invoice) => ({
+    const latestInvoices: LatestInvoice[] = data.map((invoice) => ({
       ...invoice,
       amount: formatCurrency(invoice.amount),
     }));
@@ -110,28 +111,66 @@ export async function fetchFilteredInvoices(
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const invoices = await sql<InvoicesTable[]>`
-      SELECT
-        invoices.id,
-        invoices.amount,
-        invoices.date,
-        invoices.status,
-        customers.name,
-        customers.email,
-        customers.image_url
-      FROM invoices
-      JOIN customers ON invoices.customer_id = customers.id
-      WHERE
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`} OR
-        invoices.amount::text ILIKE ${`%${query}%`} OR
-        invoices.date::text ILIKE ${`%${query}%`} OR
-        invoices.status ILIKE ${`%${query}%`}
-      ORDER BY invoices.date DESC
-      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-    `;
+    const invoices = await prisma.invoices.findMany({
+      select: {
+        id: true,
+        amount: true,
+        date: true,
+        status: true,
+        customers: {
+          select: {
+            name: true,
+            email: true,
+            image_url: true,
+          },
+        },
+      },
+      where: {
+        OR: [
+          {
+            customers: {
+              name: {
+                contains: query,
+                mode: 'insensitive',  //大文字小文字を区別しない
+              },
+            },
+          },
+          {
+            customers: {
+              email: {
+                contains: query,
+              },
+            },
+          },
+          // {
+          //   amount: {
+          //     contains: query,
+          //   },
+          // },
+          // {
+          //   date: {
+          //     equals: new Date(query),
+          //   },
+          // },
+          {
+            status: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      },
+      orderBy: { date: 'desc' },
+      take: ITEMS_PER_PAGE,
+      skip: offset,
+    });
 
-    return invoices;
+    const formattedInvoices = invoices.map((invoice) => ({
+      ...invoice,
+      date: invoice.date.toISOString(),
+    }));
+
+    return formattedInvoices;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoices.');
@@ -140,18 +179,55 @@ export async function fetchFilteredInvoices(
 
 export async function fetchInvoicesPages(query: string) {
   try {
-    const data = await sql`SELECT COUNT(*)
-    FROM invoices
-    JOIN customers ON invoices.customer_id = customers.id
-    WHERE
-      customers.name ILIKE ${`%${query}%`} OR
-      customers.email ILIKE ${`%${query}%`} OR
-      invoices.amount::text ILIKE ${`%${query}%`} OR
-      invoices.date::text ILIKE ${`%${query}%`} OR
-      invoices.status ILIKE ${`%${query}%`}
-  `;
+  //   const data = await sql`SELECT COUNT(*)
+  //   FROM invoices
+  //   JOIN customers ON invoices.customer_id = customers.id
+  //   WHERE
+  //     customers.name ILIKE ${`%${query}%`} OR
+  //     customers.email ILIKE ${`%${query}%`} OR
+  //     invoices.amount::text ILIKE ${`%${query}%`} OR
+  //     invoices.date::text ILIKE ${`%${query}%`} OR
+  //     invoices.status ILIKE ${`%${query}%`}
+  // `;
+  const data = await prisma.invoices.count({
+    where: {
+      OR: [
+        {
+          customers: {
+            name: {
+              contains: query,
+              mode: 'insensitive',  //大文字小文字を区別しない
+            },
+          },
+        },
+        {
+          customers: {
+            email: {
+              contains: query,
+            },
+          },
+        },
+        // {
+        //   amount: {
+        //     contains: query,
+        //   },
+        // },
+        // {
+        //   date: {
+        //     equals: new Date(query),
+        //   },
+        // },
+        {
+          status: {
+            contains: query,
+            mode: 'insensitive',
+          },
+        },
+      ],
+    }
+  })
 
-    const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(Number(data) / ITEMS_PER_PAGE);
     return totalPages;
   } catch (error) {
     console.error('Database Error:', error);
