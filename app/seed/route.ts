@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import { invoices, customers, revenue, users } from '../lib/placeholder-data';
+import postgres from 'postgres';
 
 const prisma = new PrismaClient();
 
@@ -24,6 +25,19 @@ async function seedUsers() {
 }
 
 async function seedInvoices() {
+  // const deleteInvoices = await prisma.invoices.deleteMany({});
+  // const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+  // await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  // await sql`
+  //   CREATE TABLE IF NOT EXISTS invoices (
+  //     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  //     customer_id UUID NOT NULL,
+  //     amount INT NOT NULL,
+  //     status VARCHAR(255) NOT NULL,
+  //     date DATE NOT NULL
+  //   );
+  // `;
   const insertedInvoices = await Promise.all(
     invoices.map(async (invoice) => {
       const seedInvoices = await prisma.invoices.create({
@@ -38,7 +52,7 @@ async function seedInvoices() {
     }),
   );
 
-  return insertedInvoices;
+  // return insertedInvoices;
 }
 
 async function seedCustomers() {
@@ -78,10 +92,10 @@ async function seedRevenue() {
 export async function GET() {
   try {
     const result = await prisma.$transaction(async () => {
-      await seedUsers();
-      await seedCustomers();
+      // await seedUsers();
+      // await seedCustomers();
       await seedInvoices();
-      await seedRevenue();
+      // await seedRevenue();
   });
 
     return new Response(JSON.stringify({ message: 'Database seeded successfully' }), {

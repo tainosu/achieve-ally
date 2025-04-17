@@ -25,7 +25,7 @@ model Invoices {
   customerId  String      @db.Uuid
   amount      Int
   status      String
-  date        DateTime    @default(now())   
+  date        DateTime 
 
   customers   Customers   @relation(fields: [customerId], references: [id])
 }
