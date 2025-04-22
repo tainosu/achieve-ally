@@ -40,4 +40,9 @@ export const { auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    async redirect({ url, baseUrl }) {
+      return '/home';
+    },
+  },
 });
