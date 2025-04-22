@@ -64,7 +64,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
     });
 
     console.log('+++created invoice+++', invoice);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('---Error creating invoice---', error);
     throw new Error('Failed to create invoice');
   } finally {

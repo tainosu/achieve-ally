@@ -77,7 +77,7 @@ async function seedRevenue() {
 
 export async function GET() {
   try {
-    const result = await prisma.$transaction(async () => {
+    await prisma.$transaction(async () => {
       await seedUsers();
       await seedCustomers();
       await seedInvoices();

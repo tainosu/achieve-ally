@@ -1,13 +1,10 @@
 import postgres from 'postgres';
 import prisma from '@/app/lib/prisma';
 import {
-  CustomerField,
   CustomersTableType,
   InvoiceForm,
-  InvoicesTable,
   LatestInvoice,
   LatestInvoiceRaw,
-  Revenue,
 } from './definitions';
 import { formatCurrency } from './utils';
 
