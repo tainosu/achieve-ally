@@ -42,6 +42,11 @@ export const { auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async redirect({ url, baseUrl }) {
+      // 外部リンクの場合はそのままリダイレクト
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      // 内部リンクの場合は /home にリダイレクト
       return '/home';
     },
   },
